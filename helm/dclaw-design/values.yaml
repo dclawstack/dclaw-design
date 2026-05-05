@@ -1,0 +1,82 @@
+# Default values for dclaw-design
+replicaCount: 2
+
+frontend:
+  image:
+    repository: ghcr.io/dclawstack/dclaw-design
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 3000
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+backend:
+  image:
+    repository: ghcr.io/dclawstack/dclaw-design-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 8096
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
+  env:
+    - name: PORT
+      value: "8096"
+    - name: DATABASE_URL
+      value: "postgresql+asyncpg://postgres:postgres@dclaw-design-db-rw:5432/dclaw_design"
+    - name: REDIS_URL
+      value: "redis://redis.dclaw-core.svc.cluster.local:6379/0"
+    # Add app-specific secrets below (Shield Agent review required)
+    # - name: OPENROUTER_API_KEY
+    #   valueFrom:
+    #     secretKeyRef:
+    #       name: dclaw-design-secrets
+    #       key: openrouter-api-key
+
+database:
+  enabled: false
+  storage: 10Gi
+  instances: 1
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 250m
+    limits:
+      memory: 1Gi
+      cpu: 500m
+
+ingress:
+  enabled: false
+  className: nginx
+  host: design.dclawstack.io
+  tls:
+    enabled: false
+    secretName: dclaw-design-tls
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
+service:
+  type: ClusterIP
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}

@@ -1,0 +1,232 @@
+openapi: 3.1.0
+info:
+  title: DClaw Video API
+  version: 1.0.0
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+
+  /api/v1/projects:
+    post:
+      summary: Create project from script
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                script_text: { type: string }
+                template: { type: string, enum: [youtube_explainer, product_demo, social_reel] }
+                voice_profile_id: { type: string }
+                character_id: { type: string }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
+    get:
+      summary: List projects
+      responses:
+        "200":
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Project"
+
+  /api/v1/projects/{id}:
+    get:
+      summary: Get project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Project detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
+  /api/v1/projects/{id}/storyboard:
+    post:
+      summary: Generate storyboard frames for all scenes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "202":
+          description: Storyboard generation queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id: { type: string }
+
+  /api/v1/projects/{id}/render:
+    post:
+      summary: Queue full video render
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "202":
+          description: Render queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id: { type: string }
+
+  /api/v1/projects/{id}/status:
+    get:
+      summary: Get render progress
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Render status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RenderJob"
+
+  /api/v1/projects/{id}/scenes:
+    get:
+      summary: List scenes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Scenes list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Scene"
+
+  /api/v1/scenes/{id}:
+    put:
+      summary: Update scene
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SceneUpdate"
+      responses:
+        "200":
+          description: Updated scene
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scene"
+
+  /api/v1/scenes/{id}/regenerate:
+    post:
+      summary: Regenerate just this scene's video
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "202":
+          description: Scene regeneration queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id: { type: string }
+
+  /api/v1/render/{job_id}/progress:
+    get:
+      summary: WebSocket progress updates
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "101":
+          description: Switching Protocols
+
+components:
+  schemas:
+    Project:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        script_text: { type: string }
+        status: { type: string, enum: [draft, storyboard, rendering, done] }
+        video_url: { type: string, nullable: true }
+        duration: { type: integer, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    Scene:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        project_id: { type: string, format: uuid }
+        scene_number: { type: integer }
+        narration_text: { type: string }
+        visual_prompt: { type: string }
+        duration_seconds: { type: number }
+        status: { type: string, enum: [pending, generating, done, error] }
+        video_clip_url: { type: string, nullable: true }
+
+    SceneUpdate:
+      type: object
+      properties:
+        narration_text: { type: string }
+        visual_prompt: { type: string }
+        duration_seconds: { type: number }
+
+    RenderJob:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        project_id: { type: string, format: uuid }
+        celery_task_id: { type: string }
+        progress_percent: { type: integer }
+        status: { type: string, enum: [pending, started, success, failure] }
+        logs: { type: string }

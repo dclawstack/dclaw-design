@@ -1,0 +1,13 @@
+{
+  "app_id": "design",
+  "name": "DClaw Design",
+  "version": "0.1.0",
+  "category": "design",
+  "icon": "/icons/design.svg",
+  "color": "#8B5CF6",
+  "entrypoint": "/",
+  "api_base": "https://design.dclawstack.io",
+  "permissions": ["read:projects", "write:projects", "read:templates", "write:templates"],
+  "requires_auth": true,
+  "billing_plan": "free"
+}
