@@ -2,32 +2,15 @@
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
+.env
 .venv/
-env/
 venv/
-*.egg-info/
-dist/
-build/
 
 # Node
 node_modules/
 .next/
-out/
-*.log
+dist/
 
-# Rust / Tauri
-src-tauri/target/
-
-# IDEs
-.idea/
+# IDE
 .vscode/
-*.swp
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Secrets
-.env
-!.env.example
+.idea/
